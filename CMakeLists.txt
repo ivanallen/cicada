@@ -3,8 +3,12 @@ project(cicada)
 
 set(CXX_FLAGS
     -std=c++17
+    -Wc++17-extensions
 )
 
+include_directories(${PROJECT_SOURCE_DIR})
+
+add_subdirectory(cicada)
 add_subdirectory(examples)
 
 #install(TARGETS cicada

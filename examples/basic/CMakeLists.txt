@@ -1,5 +1,6 @@
 add_executable(basic main.cc)
+target_link_libraries(basic cicada_core)
 
 install(TARGETS basic 
-    RUNTIME DESTINATION bin  # 可执行文件安装路径
+    RUNTIME DESTINATION bin
 )
