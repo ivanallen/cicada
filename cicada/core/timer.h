@@ -1,13 +1,11 @@
 // Author: allen
 
-#include "cicada/core/bean.h"
+#pragma once
 
 namespace cicada::core {
-
-Bean::Bean() {
-}
-
-Bean::~Bean() {
-}
+    
+class Timer {
+pubic:
+};
 
 } // namespace cicada::core
