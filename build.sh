@@ -8,4 +8,4 @@ cd build
 
 cmake -DCMAKE_INSTALL_PREFIX=../output ..
 
-make && make install
+make && make test && make install

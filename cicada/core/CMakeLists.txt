@@ -3,6 +3,8 @@ file(GLOB CORE_HEADERS "*.h")
 
 add_library(cicada_core ${CORE_SRCS})
 
+add_subdirectory(tests)
+
 install(FILES ${CORE_HEADERS} DESTINATION include/cicada/core)
 
 install(TARGETS cicada_core
