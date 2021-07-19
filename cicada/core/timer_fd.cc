@@ -10,97 +10,94 @@
 
 #include "glog/logging.h"
 
+#include "cicada/base/macro.h"
+
 namespace cicada::core {
 
 TimerFd::TimerFd() {
-    int r = ::pipe(_fds);
+    int fds[2] = { 0 };
+    int r = ::pipe(fds);
     if (r < 0) {
-        char strerrbuf[1024];
-        strerror_r(errno, strerrbuf, sizeof strerrbuf);
-        throw std::runtime_error(strerrbuf);
+        CICADA_ABORT();
     }
 
-    r = ::pipe(_poll_fds);
+    _in_fd.reset(fds[0]);
+    _out_fd.reset(fds[1]);
+
+    _out_fd.set_nonblock();
+
+    int poll_fds[2] = { 0 };
+    r = ::pipe(poll_fds);
     if (r < 0) {
-        char strerrbuf[1024];
-        strerror_r(errno, strerrbuf, sizeof strerrbuf);
-        throw std::runtime_error(strerrbuf);
+        CICADA_ABORT();
     }
+
+    _poll_in_fd.reset(poll_fds[0]);
+    _poll_out_fd.reset(poll_fds[1]);
+
+    _poll_in_fd.set_nonblock();
+    _poll_out_fd.set_nonblock();
 
     _timer_thread = std::thread([this]() {
         while (!_stop) {
-            std::unique_lock<std::mutex> guard(_mutex);
-           _running_cv.wait(guard, [this]{return _running || _stop;}); 
-           guard.unlock();
-
-           if (_stop) break;
-
            struct timeval tp = { 0 };
            ::gettimeofday(&tp, nullptr);
 
-           int now_ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-           int timeout_ms = _expire_ms - now_ms;
+           int64_t now_ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+           int64_t expire_ms = _expire_ms; // get value from atomic
 
-           if (timeout_ms <= 0) {
-               ::write(_fds[1], " ", 1);
-               _running = false;
+           int timeout_ms = 0;
+
+           if (expire_ms == 0) {
+               timeout_ms = -1;
+           } else if (expire_ms > now_ms) {
+               timeout_ms = static_cast<int>(expire_ms - now_ms);
+           } else {
+               ::write(_out_fd.value(), " ", 1);
                continue;
            }
 
-           struct pollfd pollfd = {_poll_fds[0], POLLIN, 0};
+           struct pollfd pollfd = {_poll_in_fd.value(), POLLIN, 0};
            int r = ::poll(&pollfd, 1, timeout_ms);
+
            if (r < 0) {
-               char strerrbuf[1024];
-               strerror_r(errno, strerrbuf, sizeof strerrbuf);
-               throw std::runtime_error(strerrbuf);
+               CICADA_ABORT();
            }
+
            if (r == 1) {
                char c = 0;
-               ::read(_poll_fds[0], &c, 1);
+               ::read(_poll_in_fd.value(), &c, 1);
                continue;
            }
 
-           ::write(_fds[1], " ", 1);
-           _running = false;
+           ::write(_out_fd.value()," ", 1);
         }
     });
 }
 
 TimerFd::~TimerFd() {
     _stop = true;
-    _running_cv.notify_one();
-    ::write(_poll_fds[1], " ", 1);
+    ::write(_poll_out_fd.value(), " ", 1);
 
     _timer_thread.join();
-    ::close(_fds[0]);
-    ::close(_fds[1]);
-    ::close(_poll_fds[0]);
-    ::close(_poll_fds[1]);
 }
 
-bool TimerFd::set_timeout(int timeout_ms) {
+void TimerFd::set_timeout(int timeout_ms) {
     assert(timeout_ms >= 0);
 
     struct timeval tp = { 0 };
     ::gettimeofday(&tp, nullptr);
 
-    int64_t now_ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-    int64_t expire_ms = now_ms + timeout_ms;
+    uint64_t now_ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+    uint64_t expire_ms = now_ms + timeout_ms;
     
-    if (_running && expire_ms > _expire_ms) return false;
-
     // wakeup thread
     _expire_ms = expire_ms;
-    ::write(_poll_fds[1], " ", 1);
-
-    _running = true;
-    _running_cv.notify_one();
-
-    return true;
+    ::write(_poll_out_fd.value(), " ", 1);
 }
 
 int TimerFd::fd() const {
-    return _fds[0];
+    return _in_fd.value();
 }
 
 

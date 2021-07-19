@@ -7,6 +7,8 @@
 #include <mutex>
 #include <thread>
 
+#include "cicada/base/fd.h"
+
 namespace cicada::core {
 
 class TimerFd {
@@ -14,11 +16,14 @@ public:
     TimerFd();
     ~TimerFd();
 
-    bool set_timeout(int timeout_ms);
+    void set_timeout(int timeout_ms);
     int fd() const;
 private:
-    int _fds[2] = { 0 };
-    int _poll_fds[2] = { 0 };
+    base::Fd _in_fd; // block
+    base::Fd _out_fd; // nonblock
+    base::Fd _poll_in_fd; // nonblock
+    base::Fd _poll_out_fd; // nonblock
+
     std::thread _timer_thread;
     std::condition_variable _running_cv;
     std::mutex _mutex;

@@ -12,14 +12,14 @@ TEST(timer_fd_test, timer_fd_test) {
     char c = 0;
     int r = 0;
 
-    EXPECT_TRUE(timer_fd.set_timeout(100));
-    EXPECT_FALSE(timer_fd.set_timeout(200));
+    timer_fd.set_timeout(100);
+    timer_fd.set_timeout(200);
     r = ::read(timer_fd.fd(), &c, 1);
     EXPECT_EQ(r, 1);
     EXPECT_EQ(c, ' ');
 
-    EXPECT_TRUE(timer_fd.set_timeout(100));
-    EXPECT_FALSE(timer_fd.set_timeout(200));
+    timer_fd.set_timeout(100);
+    timer_fd.set_timeout(200);
     r = ::read(timer_fd.fd(), &c, 1);
     EXPECT_EQ(r, 1);
     EXPECT_EQ(c, ' ');
