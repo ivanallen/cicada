@@ -5,17 +5,18 @@
 #include <functional>
 
 namespace cicada::core {
-    
+
 class Alert {
 public:
-    Alert(std::function<void()> cb, int expire_ms, int interval_ms);
+    Alert(std::function<void()> cb, int64_t expire_ms);
 
     void run() const;
 
+    int64_t expire_ms() const;
+
 private:
     std::function<void()> _callback;
-    int _expire_ms = 0;
-    int _interval_ms = 0;
+    int64_t _expire_ms = 0;
 };
 
 } // namespace cicada::core

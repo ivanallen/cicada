@@ -10,6 +10,7 @@ class Observer;
 
 class Poller {
 public:
+    virtual ~Poller() {}
     // poll obsever has events
     virtual std::vector<Observer*> poll(int timeout_ms) const = 0;
 

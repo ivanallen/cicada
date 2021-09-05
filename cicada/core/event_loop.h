@@ -1,11 +1,13 @@
 // Author: allen
 
 #pragma once
+#include <memory>
+
+#include "cicada/core/poller.h"
 
 namespace cicada::core {
 
 class Observer;
-class Poller;
 class EventLoop {
 public:
     EventLoop();
@@ -14,7 +16,7 @@ public:
     void loop() const;
 
 private:
-    Poller* _poller;
+    std::unique_ptr<Poller> _poller;
     bool _stop = false;
 };
 

@@ -5,9 +5,13 @@
 #include <cassert>
 
 #include "cicada/core/observer.h"
-#include "cicada/core/poller.h"
+#include "cicada/core/poller/pollpoller.h"
 
 namespace cicada::core {
+
+EventLoop::EventLoop() : _poller(std::make_unique<PollPoller>()) {
+
+}
 
 void EventLoop::loop() const {
     while (!_stop) {

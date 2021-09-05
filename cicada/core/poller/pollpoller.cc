@@ -8,6 +8,8 @@
 
 #include "cicada/core/observer.h"
 
+#include <glog/logging.h>
+
 namespace cicada::core {
 
 std::vector<Observer*> PollPoller::poll(int timeout_ms) const {
@@ -16,7 +18,6 @@ std::vector<Observer*> PollPoller::poll(int timeout_ms) const {
     std::vector<struct pollfd> fds;
     fds.reserve(_observers.size());
 
-    nfds_t nfds = fds.size();
 
     for (auto [fd, observer] : _observers) {
         int events = observer->events();
@@ -30,6 +31,7 @@ std::vector<Observer*> PollPoller::poll(int timeout_ms) const {
         back.revents = 0;
     }
 
+    nfds_t nfds = fds.size();
     int count = ::poll(&fds[0], nfds, timeout_ms);
 
     for (int i = 0; i < count; ++i) {
@@ -43,6 +45,7 @@ std::vector<Observer*> PollPoller::poll(int timeout_ms) const {
         revents |= (item.revents & POLLOUT) ? Observer::kWriteEvent : 0;
         revents |= (item.revents & POLLERR) ? Observer::kErrorEvent : 0;
         observer->set_revents(revents);
+        res.emplace_back(observer);
     }
 
     return res;
@@ -51,7 +54,7 @@ std::vector<Observer*> PollPoller::poll(int timeout_ms) const {
 void PollPoller::update(Observer* observer) {
     int fd = observer->fd();
     auto [iter, ok] = _observers.insert(std::make_pair(fd, observer));
-    
+
     assert(ok);
 }
 

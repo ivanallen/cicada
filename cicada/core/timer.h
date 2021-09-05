@@ -3,7 +3,7 @@
 #pragma once
 
 namespace cicada::core {
-    
+
 class Timer {
 pubic:
     Timer();

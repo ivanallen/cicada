@@ -30,34 +30,42 @@ void Observer::set_error_callback(ErrorCallback cb) {
 
 void Observer::enable_read() {
     _events |= kReadEvent;
+    update();
 }
 
 void Observer::enable_write() {
     _events |= kWriteEvent;
+    update();
 }
 
 void Observer::enable_error() {
     _events |= kErrorEvent;
+    update();
 }
 
 void Observer::enable_all() {
     _events |= (kReadEvent | kWriteEvent | kErrorEvent);
+    update();
 }
 
 void Observer::disable_read() {
     _events &= ~kReadEvent;
+    update();
 }
 
 void Observer::disable_write() {
     _events &= ~kWriteEvent;
+    update();
 }
 
 void Observer::disable_error() {
     _events &= ~kErrorEvent;
+    update();
 }
 
 void Observer::disable_all() {
     _events = kNoneEvent;
+    update();
 }
 
 int Observer::fd() const {
@@ -83,17 +91,14 @@ void Observer::handle_events() const {
 
     if (_read_callback && (revents & kReadEvent)) {
         _read_callback();
-        LOG(INFO) << "read callback";
     }
 
     if (_write_callback && (revents & kWriteEvent)) {
-        _write_callback(); 
-        LOG(INFO) << "write callback";
+        _write_callback();
     }
 
     if (_error_callback && (revents & kWriteEvent)) {
-        _error_callback(); 
-        LOG(INFO) << "error callback";
+        _error_callback();
     }
 }
 

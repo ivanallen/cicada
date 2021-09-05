@@ -6,7 +6,7 @@ add_subdirectory(poller)
 
 add_library(cicada_core ${CORE_SRCS})
 #add_dependencies(cicada_core glog)
-target_link_libraries(cicada_core cicada_base glog)
+target_link_libraries(cicada_core cicada_base cicada_poller glog)
 
 install(FILES ${CORE_HEADERS} DESTINATION include/cicada/core)
 
